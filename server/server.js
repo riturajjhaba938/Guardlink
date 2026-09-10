@@ -48,7 +48,6 @@ io.on("connection", (socket) => {
 
   socket.on("child-location-update", (data) => {
     console.log("[Socket] Real-time child location update:", data);
-    io.emit("location-update", data);
     if (data.childId) {
       io.to(`child_${data.childId}`).emit("location-update", data);
     }
