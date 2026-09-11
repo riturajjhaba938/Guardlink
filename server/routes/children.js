@@ -26,7 +26,10 @@ router.post("/", auth, async (req, res) => {
     }
 
     const { childEmail } = req.body;
-    const childUser = await User.findOne({ email: childEmail, role: "child" });
+    const childUser = await User.findOne({ 
+      email: { $regex: new RegExp(`^${childEmail.trim()}$`, 'i') }, 
+      role: "child" 
+    });
     
     if (!childUser) {
       return res.status(404).json({ error: "Child account not found." });

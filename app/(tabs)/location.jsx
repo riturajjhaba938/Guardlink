@@ -24,7 +24,6 @@ export default function LocationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const webViewRef = useRef(null);
-  const socketRef = useRef(null);
 
   const fetchLocation = async () => {
     try {
@@ -36,10 +35,6 @@ export default function LocationScreen() {
       
       const child = childrenRes.data[0];
       setChildName(child.childId?.name || "Child");
-      
-      if (socketRef.current) {
-        socketRef.current.emit("join-child", child.childId._id);
-      }
 
       const locationRes = await api.get(`/location/${child.childId._id}`);
       
@@ -67,10 +62,12 @@ export default function LocationScreen() {
   };
 
   useEffect(() => {
-    // Real-Time Socket.IO Live Listener
-    socketRef.current = io(SOCKET_URL, { transports: ["websocket"] });
+    fetchLocation();
 
-    socketRef.current.on("location-update", (data) => {
+    // Real-Time Socket.IO Live Listener
+    const socket = io(SOCKET_URL, { transports: ["websocket"] });
+
+    socket.on("location-update", (data) => {
       console.log("[Socket] Real-time map update received:", data);
       if (data && data.latitude && data.longitude) {
         setLocation({
@@ -89,10 +86,8 @@ export default function LocationScreen() {
       }
     });
 
-    fetchLocation();
-
     return () => {
-      if (socketRef.current) socketRef.current.disconnect();
+      socket.disconnect();
     };
   }, []);
 
