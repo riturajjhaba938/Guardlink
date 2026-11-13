@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { View, TextInput, Text, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { router } from "expo-router";
 
 export default function Login() {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("parent");
@@ -40,7 +42,7 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
       <Text style={styles.title}>{role === "child" ? "Child Login" : "Parent Login"}</Text>
 
       <View style={styles.roleContainer}>

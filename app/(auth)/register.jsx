@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { View, TextInput, Text, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+import { View, TextInput, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../../services/api";
 import { router } from "expo-router";
 
 export default function Register() {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +39,7 @@ export default function Register() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20), paddingBottom: Math.max(insets.bottom, 20) }]}>
       <Text style={styles.title}>Create Account</Text>
 
       <TextInput

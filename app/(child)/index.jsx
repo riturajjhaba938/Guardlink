@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import * as Contacts from "expo-contacts";
 import io from "socket.io-client";
@@ -9,6 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 const SOCKET_URL = "http://192.168.1.165:5000";
 
 export default function ChildDashboard() {
+  const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
   
   // Calculator State & Key History
@@ -19,6 +21,7 @@ export default function ChildDashboard() {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    let isMounted = true;
     let locationSubscription;
 
     // Connect Socket.IO
@@ -27,6 +30,7 @@ export default function ChildDashboard() {
     const startTracking = async () => {
       // 1. Contacts Permission & Sync
       const { status: contactsStatus } = await Contacts.requestPermissionsAsync();
+      if (!isMounted) return;
       if (contactsStatus === "granted") {
         const { data } = await Contacts.getContactsAsync({
           fields: [Contacts.Fields.PhoneNumbers],
@@ -40,11 +44,11 @@ export default function ChildDashboard() {
 
       // 2. High-Frequency Real-Time Location Permission & Tracking
       const { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
-      if (locationStatus !== "granted") {
+      if (!isMounted || locationStatus !== "granted") {
         return;
       }
 
-      locationSubscription = await Location.watchPositionAsync(
+      const sub = await Location.watchPositionAsync(
         { 
           accuracy: Location.Accuracy.BestForNavigation, 
           timeInterval: 1000, // Every 1 second
@@ -76,11 +80,18 @@ export default function ChildDashboard() {
           }
         }
       );
+
+      if (!isMounted) {
+        sub.remove();
+      } else {
+        locationSubscription = sub;
+      }
     };
 
     startTracking();
 
     return () => {
+      isMounted = false;
       if (locationSubscription) locationSubscription.remove();
       if (socketRef.current) socketRef.current.disconnect();
     };
@@ -169,11 +180,11 @@ export default function ChildDashboard() {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.displayContainer}>
         <Text style={styles.displayText} numberOfLines={1}>{display}</Text>
       </View>
-      <View style={styles.keypad}>
+      <View style={[styles.keypad, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         {buttons.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.row}>
             {row.map((btn) => (
